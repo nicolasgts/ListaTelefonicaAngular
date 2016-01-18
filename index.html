@@ -25,6 +25,10 @@
 	      	.selecionado{
 	      		background: red;
 	      	}
+
+	      	.negrito{
+	      		font-weight: bold;	      	
+	      	}
 	      
 	</style>
 
@@ -53,7 +57,22 @@
          				delete $scope.contato;		
          			};
 
-         			$scope.classe = "selecionado";
+
+         			$scope.apagarContatos = function (contatos) {
+         					$scope.contatos = contatos.filter(function(contato){
+         						if(!contato.selecionado) return contato;
+         					});		
+         			};
+
+
+         			$scope.isContatoSelecionado = function (contatos) {
+         					return contatos.some(function (contato){
+         								return contato.selecionado;
+         					});	
+         			};
+
+         		
+
          });
 	</script>
 </head>
@@ -61,14 +80,17 @@
 
 			<div class="jumbotron">
 				<h4>{{app}}</h4>
-				<table class="table">
+					
+				<table ng-show="contatos.length > 0" class="table">
 					<tr>
+							<th></th>
 							<th>Nome</th>
 							<th>Telefone</th>	
 							<th>Operadora</th>
 					</tr>
 
-					<tr  ng-repeat= "contato in contatos">
+					<tr ng-class="{'selecionado negrito': contato.selecionado}" ng-repeat= "contato in contatos">
+							<td><input type="checkbox" ng-model="contato.selecionado"/> </td>
 							<td>{{contato.nome}}</td>
 							<td>{{contato.telefone}}</td>
 							<td>{{contato.operadora.nome}}</td>
@@ -89,8 +111,13 @@
 			</select>
 
 			<button class="btn btn-primary btn-block" ng-click="adicionarContato(contato)" ng-disabled="!contato.nome || !contato.telefone"> Adicionar Contato</button>	
+
+					<button class="btn btn-danger btn-block" ng-click="apagarContatos(contatos)" ng-if="isContatoSelecionado(contatos)"> Apagar Contatos</button>	
 			
 			</div>	
+
+
+			<div ng-include="'footer.html'"></div>
 
 </body>
 </html>
