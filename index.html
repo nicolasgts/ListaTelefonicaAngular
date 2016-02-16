@@ -1,12 +1,13 @@
 <html ng-app="listaTelefonica">
 <head>
+	<meta charset="UTF-8">
 	<title>Lista Telefonica</title>
 
 
 	<link rel="stylesheet" type="text/css" href="lib/bootstrap/bootstrap.css">
 	<style>
 	      .jumbotron{
-	      	width: 400px;
+	      	width: 600px;
 	      	text-align: center;
 	      	margin-top: 20px;
 	      	margin-left: auto;
@@ -31,25 +32,27 @@
 	      	}
 	      
 	</style>
-
+	
+	<script src="lib/angular/angular-locale_pt-br.js"></script>
 	<script src="lib/angular/angular.js"></script>
+	<script src="lib/angular/angular-messages.js"></script>
 	<script>
-         angular.module("listaTelefonica", []);
+         angular.module("listaTelefonica", ["ngMessages"]);
          angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope){
-         			$scope.app = "lista Telefonica";
+         			$scope.app = "Lista Telefonica";
          			$scope.contatos = [
-         				{nome:"Pedro" , telefone: "99998888"},
-         				{nome:"Vitu" , telefone: "87008888"},
-         				{nome:"Maria" , telefone: "88688888"},
+         				{nome:"Pedro" , telefone: "99998888" , data : new Date(), operadora: {nome : "Oi" , codigo : 31 , categoria: "Celular" } },
+         				{nome:"Vitu" , telefone: "87008888", data : new Date(),  operadora: {nome : "Tim" , codigo : 41 ,  categoria: "Celular"}},
+         				{nome:"Maria" , telefone: "88688888" , data : new Date() , operadora : {nome : "Tim" , codigo : 41 , categoria: "Celular"} },
          			];
 
 
          			$scope.operadoras = [
-         					{nome : "Oi" , codigo : 31 , categoria: "Celular" },
-         					{nome : "Tim" , codigo : 41 , categoria: "Celular"},
-         					{nome : "Claro" , codigo : 61 , categoria: "Celular"},
-         					{nome : "GVT" , codigo : 91 , categoria: "Fixo"},
-         					{nome : "Embratel" , codigo : 101 , categoria: "Fixo"}
+         					{nome : "Oi" , codigo : 31 , categoria: "Celular" , preco :2  },
+         					{nome : "Tim" , codigo : 41 , categoria: "Celular" , preco : 1  },
+         					{nome : "Claro" , codigo : 61 , categoria: "Celular" , preco :3 },
+         					{nome : "GVT" , codigo : 91 , categoria: "Fixo" , preco :2 },
+         					{nome : "Embratel" , codigo : 101 , categoria: "Fixo", preco :2 }
          			];
 
          			$scope.adicionarContato = function (contato){
@@ -72,6 +75,11 @@
          					});	
          			};
 
+         			$scope.ordenarPor = function (campo){
+         				$scope.criterioDeOrdenacao = campo;
+         				$scope.direcaoDaOrdenacao = !$scope.direcaoDaOrdenacao;
+         			}
+
          		
 
          });
@@ -80,21 +88,23 @@
 <body ng-controller="listaTelefonicaCtrl">
 
 			<div class="jumbotron">
-				<h4>{{app}}</h4>
-					
+				<h3>{{app}}</h3>
+				<input type="text" ng-model="criterioDeBusca" placeHolder="O que você esta buscando ?" class="form-control" >	
 				<table ng-show="contatos.length > 0" class="table">
 					<tr>
 							<th></th>
-							<th>Nome</th>
-							<th>Telefone</th>	
+							<th><a href="" ng-click="ordenarPor('nome')"> Nome </a</th>
+							<th><a href="" ng-click="ordenarPor('telefone')"> Telefone</th>	
 							<th>Operadora</th>
+							<th><a href="" ng-click="ordenarPor('data')"> Data</a></th>
 					</tr>
 
-					<tr ng-class="{'selecionado negrito': contato.selecionado}" ng-repeat= "contato in contatos">
+					<tr ng-class="{'selecionado negrito': contato.selecionado}" ng-repeat= "contato in contatos | filter: criterioDeBusca | orderBy:criterioDeOrdenacao:direcaoDaOrdenacao">
 							<td><input type="checkbox" ng-model="contato.selecionado"/> </td>
 							<td>{{contato.nome}}</td>
 							<td>{{contato.telefone}}</td>
 							<td>{{contato.operadora.nome}}</td>
+							<td>{{contato.data | date:'dd/MM/yyyy HH:mm'}}</td>
 					</tr>
 
 				</table>
@@ -106,26 +116,31 @@
 
 			<form name="contatoForm">
 
-			<input class="form-control"type="text" ng-model= "contato.nome" placeHolder="Nome"  ng-required="true" name="nome"
+			<input class="form-control"type="text" ng-model= "contato.nome" placeHolder="Nome"  ng-required="true" name="nome"ng-minlength="10">
 
-			ng-minlength="10">
 			<input class="form-control" type="text" ng-model= "contato.telefone"
 			placeHolder="Telefone" ng-required="true" name="telefone"
 			ng-pattern="/^\d{4,5}-\d{4}$/"> 
 
-      			<select class="form-control" ng-model="contato.operadora" ng-options="operadora.nome group by operadora.categoria for operadora in operadoras">
+      			<select class="form-control" ng-model="contato.operadora" ng-options="operadora.nome + '(' + (operadora.preco | currency) +')' for operadora in operadoras | orderBy:'nome'">
+
       					<option value=""> Selecione uma Operadora </option>
 			</select>
 
 			</form>
 
-			<div ng-show="contatoForm.nome.$error.required && contatoForm.nome.$dirty"class="alert alert-danger">
-					Por favor, preencha o campo nome!
-			</div>
+			<div ng-messages="contatoForm.nome.$error" class="alert alert-danger"  ng-show="contatoForm.nome.$dirty">
 
+					
 
-				<div ng-show="contatoForm.nome.$error.minlength"class="alert alert-danger">
+				<div ng-message="minlength" >
 					O campo nome deve ter no minimo 10 caracteres.
+			    </div>
+
+			    <div ng-message="required">
+			    	Por favor, preencha o campo nome!	
+			    </div>
+
 			</div>
 
 
